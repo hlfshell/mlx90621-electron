@@ -4,25 +4,39 @@ const url = require('url');
 
 const SerialPort = require("serialport");
 var sp = new SerialPort("COM5", {
+	parser: SerialPort.parsers.readline('\n'),
     baudRate: 19200
 });
 
 sp.on("data", data =>{
-    console.log(data.toString());
+    try{
+		data = JSON.parse(data.toString());
+	} catch(err){
+		//do nothing
+		return;
+	}
+
+	//OK, submit the data out to be displayed
+	win.webContents.send("reading", data);
+
+});
+
+sp.on("open", data =>{
+	console.log("SP IS OPEN");
 });
 
 let win;
 
 function createWindow () {
-	win = new BrowserWindow({width: 1280, height: 720, fullscreen: true });
+	win = new BrowserWindow({width: 1280, height: 720 });
 	win.setMenu(null);
 	win.loadURL(url.format({
-		pathname: path.join(__dirname, '/static/views/index.html'),
+		pathname: path.join(__dirname, 'draw.html'),
 		protocol: 'file:',
 		slashes: true
 	}));
 
-	// win.webContents.openDevTools();
+	win.webContents.openDevTools();
 
 	win.on('closed', ()=> {
 		win = null
